@@ -1,0 +1,287 @@
+      features: [
+        "Instagram Feed Curation & Aesthetics Synchronization",
+        "Facebook Page Engagement & Strategic Seeding",
+        "High-Retention Short-Form Reels & Video Production",
+        "Viral Hook Engineering & Dynamic Script Copywriting",
+        "Platform Algorithm Tuning & Community Moderation"
+      ],
+      process: [
+        { t: "Audience Audit", d: "Analyzing target demographic trends & viral opportunities on social networks." },
+        { t: "Hook Formula", d: "Designing custom scroll-stopping script copies and storyboard frames." },
+        { t: "Visual Production", d: "Generating dynamic video edits, static layouts, and audio patterns." },
+        { t: "Algorithm Distribution", d: "Scheduling content at active hours and triggering maximum feed discovery." }
+      ]
+    },
+    {
+      title: "Meta & Google Ads",
+--
+      description: "Logo, brand kit, colours & typography — a premium identity that turns heads. We map elite aesthetic layouts, perform strict color and typography audits, and deliver clean, high-impact branding systems that instantly build customer trust and authority.",
+      tags: ["Logo Design", "Brand Guidelines", "Asset Kit"],
+      features: [
+        "Custom Tailored Vector Brand Logos & Geometry",
+        "Harmonized Theme Color Palettes & Font Pairings",
+        "Standard Style Guideline Manuals & Asset Rules",
+        "Stunning Premium Social Layouts & Overlays",
+        "Professional Corporate Pitch Decks & Digital Cards"
+      ],
+      process: [
+        { t: "Mood Mapping", d: "Curating custom style palettes, design aesthetics, and layouts." },
+        { t: "Logo Crafting", d: "Forging dynamic master vectors and wordmarks with visual revisions." },
+        { t: "Asset Packaging", d: "Exporting high-fidelity components, icons, and template kits." },
+        { t: "Style Recording", d: "Documenting rules to ensure seamless presentation across all portals." }
+      ]
+    },
+--
+              <ArrowRight size={13} className="stroke-[2.5]" />
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </Section>
+  );
+};
+
+const renderStars = (rating: number, sizeClass = "w-3 h-3 sm:w-3.5 sm:h-3.5", iconSize = 11) => {
+    return (
+        <div className="flex gap-0.5 items-center">
+            {[...Array(5)].map((_, starIdx) => {
+                const value = starIdx + 1;
+                if (rating >= value) {
+                    return <Star key={starIdx} size={iconSize} className={`fill-blue-500 text-blue-500 ${sizeClass}`} />;
+                } else if (rating >= value - 0.5) {
+                    return (
+                        <div key={starIdx} className={`${sizeClass} relative flex items-center justify-start shrink-0`}>
+                            <Star size={iconSize} className={`text-blue-500/20 ${sizeClass} absolute inset-0`} />
+                            <div className="absolute inset-y-0 left-0 overflow-hidden" style={{ width: '52%' }}>
+                                <Star size={iconSize} className={`fill-blue-500 text-blue-500 ${sizeClass}`} />
+--
+const ReviewModalContent = ({ review, onClose }: { review: any; onClose: () => void }) => {
+  const [avatarFailed, setAvatarFailed] = useState(false);
+  if (!review) return null;
+  const hasAvatar = review.avatar && !avatarFailed;
+  
+  return (
+    <div className="p-4 sm:p-8 space-y-6 sm:space-y-8 overflow-hidden relative">
+      <div className="absolute top-0 left-0 w-full h-[300px] bg-gradient-to-b from-blue-900/20 to-transparent pointer-events-none rounded-t-[2rem]" />
+      <div className="relative z-10 flex flex-col items-center justify-center text-center">
+        <div className="flex items-center gap-1.5 mb-6">
+          {renderStars(review.rating, "w-4 h-4 sm:w-5 sm:h-5", 10)}
+          <span className="text-sm sm:text-base text-blue-400 font-mono font-bold select-none ml-2">{review.rating.toFixed(1)}</span>
+        </div>
+        
+        <span className="text-blue-500/20 text-6xl sm:text-8xl font-serif leading-none select-none -mb-4 sm:-mb-6">“</span>
+        <p className="text-slate-200 text-lg sm:text-2xl md:text-3xl leading-relaxed sm:leading-relaxed font-sans italic font-medium px-4 sm:px-12">
+          {review.text}
+--
+    const [showAll, setShowAll] = useState(false);
+
+    const allClientReviews = [
+        {
+            text: "Clarix Labs helped us scale our presence with high-quality reel edits that actually capture the audience's attention. Our engagement metrics have never been higher.",
+            author: "WWEStorylines TV",
+            role: "YouTube Creator",
+            avatar: "https://yt3.googleusercontent.com/aT3rROjnCKDW3wqzu9VxIOa6GyLGzduQnAxNY64NKHjmg13B7VgXV7dG42acJmeI8Ce8gRgJ6-A=s160-c-k-c0x00ffffff-no-rj",
+            logoBg: "bg-black/50 p-0.5",
+            initials: "WT",
+            rating: 5
+        },
+        {
+            text: "The content strategy for our cricket edits was a game-changer. They understand trending formats and how to make videos go viral in the sports niche.",
+            author: "CricEditz070",
+            role: "Sports Creator",
+            avatar: "https://yt3.googleusercontent.com/Fs1_ykz6l09-hFKRpcdBv3WtxZp64FYklJwojbXjt64vpiJ3XpubPt0WoE1do2Ms_KLI2sk74aM=s160-c-k-c0x00ffffff-no-rj",
+            logoBg: "bg-black/50 p-0.5",
+            initials: "CE",
+            rating: 4.5
+        },
+        {
+            text: "Our Instagram looks incredibly premium now. They managed to capture the luxury vibe of our furniture perfectly through their visual storytelling.",
+            author: "Sofa Vogue",
+            role: "Luxury Furniture Brand",
+            avatar: "https://scontent.cdninstagram.com/v/t51.82787-19/617022993_17929988142172968_6579848652965690981_n.jpg?_nc_cat=106&ccb=7-5&_nc_sid=bf7eb4&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDIxLkMzIn0%3D&_nc_ohc=VFLAmE5-aEQQ7kNvwHICbbx&_nc_oc=AdoeAX6qGEkKzTBuld43YO9c6UD8zZlhrpoVZFuVIOMEpa_ClUgURCubJuLZH5znn5s&_nc_zt=24&_nc_ht=scontent.cdninstagram.com&_nc_gid=72ivlsn1eTt66ayJ4YYjRA&_nc_ss=7aaaf&oh=00_Af964w2QY1E1r7vrIf65EzF2rgr6TX6XFC_i4X0yaDtqXw&oe=6A317896",
+            logoBg: "bg-white p-0.5",
+            initials: "SV",
+            rating: 4.5
+        },
+        {
+            text: "Managing social media for an educational school requires a delicate balance. Clarix Labs nailed the tone and boosted our community engagement.",
+            author: "The Orbis Schools",
+            role: "Education Institution",
+            avatar: "https://www.theorbisschool.com/images/orbis-logo.png",
+            logoBg: "bg-white p-0.5",
+            initials: "TO",
+            rating: 4
+        },
+        {
+            text: "Incredible response to our interior showcase reels. Their team delivered high-intent local customer inquiries and walk-ins within weeks.",
+            author: "Adarsh Furniture",
+            role: "Luxury Furniture",
+            avatar: "https://unavatar.io/instagram/adarsh_furniture",
+            logoBg: "bg-amber-500/10",
+            initials: "AF",
+            rating: 4.5
+        },
+        {
+            text: "Our commercial real estate campaigns achieved unmatched local reach. They transformed complex property walk-throughs into premium social assets.",
+            author: "Goldust",
+            role: "Real Estate Builder",
+            avatar: "https://unavatar.io/instagram/goldust_infra",
+            logoBg: "bg-yellow-500/10",
+            initials: "GI",
+            rating: 4.5
+        },
+        {
+            text: "A highly professional team that understands premium bathroom branding. Our showroom video concepts looked like cinematic masterpieces.",
+            author: "Bath Valley",
+            role: "Bathroom Decor",
+            avatar: "https://unavatar.io/instagram/bath_valley",
+            logoBg: "bg-cyan-500/10",
+            initials: "BV",
+            rating: 5
+        },
+        {
+            text: "Stunning cinematic drone visual edits and premium post-production. They captured the true essence of luxury estate living.",
+            author: "Florence Premium Residencies",
+            role: "Luxury Developer",
+            avatar: "https://unavatar.io/instagram/florence_residencies",
+            logoBg: "bg-indigo-500/10",
+            initials: "FP",
+            rating: 4.5
+        },
+        {
+            text: "Our fashion clothing collections look absolutely gorgeous in their reel edit formats. We saw a dramatic rise in Instagram direct inquiries.",
+            author: "Japnam Designs",
+            role: "Bespoke Fashion Label",
+            avatar: "https://unavatar.io/instagram/japnam_designs",
+            logoBg: "bg-fuchsia-500/10",
+            initials: "JD",
+            rating: 5
+        },
+        {
+            text: "They beautifully balanced traditional natural healing values with modern video aesthetics. Highly recommend their organic content blueprints.",
+            author: "Vedra",
+            role: "Natural Wellness Clinic",
+            avatar: "https://unavatar.io/instagram/vedra_ayurveda",
+            logoBg: "bg-green-500/10",
+            initials: "VA",
+            rating: 4.5
+        },
+        {
+            text: "The gourmet close-ups and cozy lounge vibe reels get food lovers through our doors every single weekend. Pure aesthetic magic!",
+            author: "The Loft",
+            role: "Gourmet Lounge",
+            avatar: "https://unavatar.io/instagram/theloft_ludhiana",
+            logoBg: "bg-zinc-800/10",
+            initials: "TL",
+            rating: 4
+        },
+        {
+            text: "Highly professional, communicative, and creative realty content assets. They made our commercial portfolio stand out.",
+            author: "Diwa Realty LLP",
+            role: "Commercial Realty Firm",
+            avatar: "https://unavatar.io/instagram/diwa_realty",
+            logoBg: "bg-slate-500/10",
+            initials: "DR",
+            rating: 4.5
+        },
+        {
+            text: "Superb localized real estate targeting. They showcased our premium hill-view properties with breath-taking clarity and visual flare.",
+            author: "Vista Properties",
+            role: "Scenic Property Agency",
+            avatar: "https://unavatar.io/instagram/vista_properties",
+            logoBg: "bg-blue-400/10",
+            initials: "VP",
+            rating: 4.5
+        },
+        {
+            text: "Their Middle-East travel guides and business setup explainer videos received global appreciation and amazing organic traffic.",
+            author: "Better",
+            role: "Travel Portal",
+            avatar: "https://unavatar.io/instagram/better_uae",
+            logoBg: "bg-amber-400/10",
+            initials: "BU",
+            rating: 4.5
+        },
+        {
+            text: "Vibrant colors, high energy background music, and premium editing that made our gourmet Indian dishes irresistible to local foodies.",
+            author: "Sylvania Indian Restaurant",
+            role: "Indian Fine Dining",
+            avatar: "https://instagram.fpnq22-1.fna.fbcdn.net/v/t51.2885-19/470894028_1630157414202770_8780468391616460573_n.jpg?efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDgwLmMyIn0&_nc_ht=instagram.fpnq22-1.fna.fbcdn.net&_nc_cat=102&_nc_oc=Q6cZ2gEVBK2BUtcT9Aji-6j4__3wzaTa9g_EY0WYWjq3xALtXarD4zI6NZhFrF7OUPBHTA8&_nc_ohc=dj_-nbT0xgwQ7kNvwHd3Q-8&_nc_gid=9EuUFSIs_5gjvadf9ZBwQg&edm=AP4sbd4BAAAA&ccb=7-5&oh=00_Af_spZsfD2hMk3Vi-6CfF1ZBj4XNW0Z78GR2hho2unY3xQ&oe=6A318951&_nc_sid=7a9f4b",
+            logoBg: "bg-white p-0.5",
+            initials: "SR",
+            rating: 4.5
+        },
+        {
+            text: "Our viral food challenge reels absolutely blew up. They know exactly how to trigger visual cravings and trending reach.",
+            author: "Meat Mechanics",
+            role: "Food & Restaurant Brand",
+            avatar: "https://instagram.fpnq22-1.fna.fbcdn.net/v/t51.2885-19/454722908_1978419785920994_1331566226510301920_n.jpg?efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby45NjAuYzIifQ&_nc_ht=instagram.fpnq22-1.fna.fbcdn.net&_nc_cat=102&_nc_oc=Q6cZ2gHusmBthz2jJynneUTIvKElCSeMEKYqLzvlfFqeXOfyN15q-spb_mOnWd_93Muhksc&_nc_ohc=AdTrhT6vMJ4Q7kNvwEeyzHU&_nc_gid=ZCSLEyfeSWiAig06rcQzGw&edm=AP4sbd4BAAAA&ccb=7-5&oh=00_Af_pwR6uCdpN48p4jzK4Tc1arw-Bp3ApFrAT2vX7EgYe9Q&oe=6A318C0C&_nc_sid=7a9f4b",
+            logoBg: "bg-white p-0.5",
+            initials: "MM",
+            rating: 5
+        },
+        {
+            text: "Prompt responses, flawless video exports, and crisp graphic ads that directly boosted our domestic sweep-service inquiries.",
+            author: "Sweepy Maid",
+            role: "Home Cleaning Service",
+            avatar: "https://scontent.cdninstagram.com/v/t51.2885-19/301153963_136262702444487_9101385390772307234_n.jpg?_nc_cat=109&ccb=7-5&_nc_sid=bf7eb4&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=EFLrVHXNsG4Q7kNvwEz6Mpb&_nc_oc=AdqgFE2OC62pdavGwdfxujnx5YdVQtD5jmhTRXJXJbi-KbZZrg1YGTOdp0sozMdngxE&_nc_zt=24&_nc_ht=scontent.cdninstagram.com&_nc_ss=7aaaf&oh=00_Af_01psqMh0PllToDmo5rlUDjBglvTnzUPr58KiH0ud1Ew&oe=6A31624B",
+            logoBg: "bg-sky-400/10",
+            initials: "SM",
+            rating: 4.5
+        },
+        {
+            text: "Their fine-dining media push gave us beautiful gourmet videos that reach high-intent customers who appreciate true premium dining quality.",
+            author: "The Grand Pavilion",
+            role: "Premium Restaurant",
+            avatar: "https://instagram.fpnq22-1.fna.fbcdn.net/v/t51.2885-19/274398235_4652225414876387_398269555590706351_n.jpg?efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby41MDAuYzIifQ&_nc_ht=instagram.fpnq22-1.fna.fbcdn.net&_nc_cat=111&_nc_oc=Q6cZ2gHzhkadpeAyLslXTePuud4HmutWNAq4HlYySjheo5Xmu2r18dcZ845bny9UmnVmhpo&_nc_ohc=1Ho6KKnb1w4Q7kNvwGEr8H_&_nc_gid=VHRANpIH9CNAVOj4FU6UFw&edm=AP4sbd4BAAAA&ccb=7-5&oh=00_Af_e1u1Ttz9BALsIVrkx74jMHIGMyiq6CqI4jcQ78k1mpw&oe=6A317AB8&_nc_sid=7a9f4b",
+            logoBg: "bg-white p-0.5",
+            initials: "GP",
+            rating: 4.5
+        }
+    ];
+
+    const displayedReviews = showAll ? allClientReviews : allClientReviews.slice(0, 4);
+
+    const averageRating = (
+        allClientReviews.reduce((sum, r) => sum + r.rating, 0) / allClientReviews.length
+    ).toFixed(1);
+
+    const handleToggleShowAll = () => {
+        if (!showAll) {
+            setShowAll(true);
+--
+        exit: { opacity: 0, scale: 0.98, transition: { duration: 0.12 } }
+    };
+
+    return (
+        <Section className="bg-white/[0.01] py-14 relative overflow-hidden">
+            <div id="reviews-section-header">
+                <SectionTitle subtitle="CLIENT FEEDBACK" title="Voices of Success" />
+            </div>
+            
+            <div className="max-w-5xl mx-auto px-4">
+                {/* Average overall rating display block */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-10 pb-6 border-b border-white/5">
+                    <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+                        <div className="bg-white/5 border border-white/10 px-5 py-3 rounded-2xl flex flex-col items-center justify-center min-w-[110px] shadow-inner select-none">
+                            <span className="text-3xl sm:text-4xl font-display font-extrabold text-white tracking-tight">{averageRating}</span>
+                            <span className="text-[9px] text-slate-400 font-mono tracking-widest uppercase mt-1">out of 5.0</span>
+--
+                                     onClick={() => {
+                                       if (setModal) {
+                                         setModal({ type: 'review', data: r });
+                                       }
+                                     }}
+                                     className="h-full relative bg-white/5 border border-white/10 p-3 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl flex flex-col justify-between group cursor-pointer transition-all duration-300 hover:scale-[1.025] hover:-translate-y-1 hover:border-blue-500/40 hover:bg-white/[0.08] hover:shadow-xl hover:shadow-blue-500/5 select-none"
+                                 >
+                                     <div className="space-y-1 sm:space-y-2 lg:space-y-3.5 overflow-hidden">
+                                         <div className="flex items-center justify-between">
+                                             <div className="flex items-center gap-1">
+                                                 {renderStars(r.rating, "w-2 h-2 sm:w-2.5 sm:h-2.5", 8)}
+                                                 <span className="text-[7px] sm:text-[9px] text-blue-400 font-mono font-bold select-none">{r.rating.toFixed(1)}</span>
+                                             </div>
+                                             <span className="text-blue-500/10 text-xl sm:text-3xl lg:text-4xl font-serif leading-none select-none group-hover:text-blue-500/25 transition-colors">“</span>
+                                         </div>
+                                         <p className="text-slate-300 text-[8px] sm:text-[10px] md:text-[11px] lg:text-sm leading-relaxed sm:leading-relaxed lg:leading-relaxed italic font-sans line-clamp-4 sm:line-clamp-5">
+                                             "{r.text}"
