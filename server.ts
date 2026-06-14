@@ -273,71 +273,10 @@ async function getPayPalAccessToken() {
 }
 
 
-async function startServer() {
-  const app = express();
-  const PORT = 3000;
+const app = express();
+const PORT = 3000;
 
-  console.log(`Clarix Labs Server Starting. NODE_ENV=${process.env.NODE_ENV}`);
-
-  // Scan directories for any input_file* assets to understand their locations
-  try {
-    const cwdFiles = fs.readdirSync(process.cwd());
-    const findings: string[] = [];
-
-    // Recursive search function limited to depth 3
-    const walk = (dir: string, depth = 0) => {
-      if (depth > 3) return;
-      // Skip heavy/system folders
-      if (
-        dir.includes("node_modules") || 
-        dir.includes(".git") || 
-        dir.includes("proc") || 
-        dir.includes("sys") || 
-        dir.includes("dev") || 
-        dir.includes("dist")
-      ) {
-        return;
-      }
-      try {
-        const files = fs.readdirSync(dir);
-        for (const file of files) {
-          const filepath = path.join(dir, file);
-          let isDir = false;
-          try {
-            isDir = fs.statSync(filepath).isDirectory();
-          } catch(e) {}
-
-          if (isDir) {
-            walk(filepath, depth + 1);
-          } else {
-            const lowerFile = file.toLowerCase();
-            if (lowerFile.includes("input_file") || lowerFile.endsWith(".png") || lowerFile.endsWith(".jpg") || lowerFile.endsWith(".jpeg") || lowerFile.endsWith(".webp")) {
-              findings.push(filepath);
-            }
-          }
-        }
-      } catch (e) {}
-    };
-
-    walk(process.cwd());
-
-    const report = [
-      "Process CWD: " + process.cwd(),
-      "CWD Files: " + JSON.stringify(cwdFiles),
-      "Recursive scanner findings (matching input_* or image extensions):",
-      JSON.stringify(findings, null, 2)
-    ].join("\n");
-
-    fs.writeFileSync(path.join(process.cwd(), "src", "files_list.txt"), report, "utf8");
-    console.log("Wrote discovery report to files_list.txt");
-  } catch (e: any) {
-    console.error("Diagnostic scanner error:", e.message);
-  }
-
-  // Log loaded Razorpay keys for diagnostic purposes
-  const { keyId: initKeyId, keySecret: initKeySecret } = getRazorpayCredentials();
-  console.log(`Server init - Resolved Key ID: "${initKeyId.substring(0, 8)}..." (length: ${initKeyId.length})`);
-  console.log(`Server init - Resolved Key Secret length: ${initKeySecret.length}`);
+console.log(`Clarix Labs Server Starting. NODE_ENV=${process.env.NODE_ENV}`);
 
   app.use(express.json());
 
@@ -1313,40 +1252,103 @@ KEY FACTS ABOUT CLARIX LABS:
     res.status(404).send("File not found");
   });
 
-  // Vite middleware for development
-  if (process.env.NODE_ENV !== "production") {
-    const { createServer: createViteServer } = await import("vite");
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
-  } else {
-    let distPath = path.join(process.cwd(), 'dist');
-    // Inline fallback if process.cwd()/dist does not exist or we are running bundled cjs
-    if (!fs.existsSync(distPath) && typeof __dirname !== 'undefined') {
-      if (fs.existsSync(path.join(__dirname, 'index.html'))) {
-        distPath = __dirname;
+  async function startListening() {
+    // Vite middleware for development
+    if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
+      const { createServer: createViteServer } = await import("vite");
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: "spa",
+      });
+      app.use(vite.middlewares);
+    } else if (!process.env.VERCEL) {
+      let distPath = path.join(process.cwd(), 'dist');
+      // Inline fallback if process.cwd()/dist does not exist or we are running bundled cjs
+      if (!fs.existsSync(distPath) && typeof __dirname !== 'undefined') {
+        if (fs.existsSync(path.join(__dirname, 'index.html'))) {
+          distPath = __dirname;
+        }
+      }
+      console.log(`Production static files directory matched to: "${distPath}"`);
+      if (distPath && fs.existsSync(distPath)) {
+        app.use(express.static(distPath));
+        app.get('*', (req, res) => {
+          res.sendFile(path.join(distPath, 'index.html'));
+        });
+      } else {
+        console.error(`CRITICAL: Production static file path does not exist: "${distPath}"`);
+        // Fallback router for API routes to at least function
+        app.get('*', (req, res) => {
+          res.status(404).send("Application static assets not built yet. Please run build first.");
+        });
       }
     }
-    console.log(`Production static files directory matched to: "${distPath}"`);
-    if (distPath && fs.existsSync(distPath)) {
-      app.use(express.static(distPath));
-      app.get('*', (req, res) => {
-        res.sendFile(path.join(distPath, 'index.html'));
-      });
-    } else {
-      console.error(`CRITICAL: Production static file path does not exist: "${distPath}"`);
-      // Fallback router for API routes to at least function
-      app.get('*', (req, res) => {
-        res.status(404).send("Application static assets not built yet. Please run build first.");
+
+    if (!process.env.VERCEL) {
+      app.listen(PORT, "0.0.0.0", () => {
+        console.log(`Server listening at http://0.0.0.0:${PORT}`);
       });
     }
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server listening at http://0.0.0.0:${PORT}`);
-  });
+  startListening();
+
+// We run the diagnostics and startup logs only when running locally (not on Vercel)
+if (!process.env.VERCEL) {
+  try {
+    const cwdFiles = fs.readdirSync(process.cwd());
+    const findings: string[] = [];
+    const walk = (dir: string, depth = 0) => {
+      if (depth > 3) return;
+      if (
+        dir.includes("node_modules") || 
+        dir.includes(".git") || 
+        dir.includes("proc") || 
+        dir.includes("sys") || 
+        dir.includes("dev") || 
+        dir.includes("dist")
+      ) {
+        return;
+      }
+      try {
+        const files = fs.readdirSync(dir);
+        for (const file of files) {
+          const filepath = path.join(dir, file);
+          let isDir = false;
+          try {
+            isDir = fs.statSync(filepath).isDirectory();
+          } catch(e) {}
+
+          if (isDir) {
+            walk(filepath, depth + 1);
+          } else {
+            const lowerFile = file.toLowerCase();
+            if (lowerFile.includes("input_file") || lowerFile.endsWith(".png") || lowerFile.endsWith(".jpg") || lowerFile.endsWith(".jpeg") || lowerFile.endsWith(".webp")) {
+              findings.push(filepath);
+            }
+          }
+        }
+      } catch (e) {}
+    };
+
+    walk(process.cwd());
+
+    const report = [
+      "Process CWD: " + process.cwd(),
+      "CWD Files: " + JSON.stringify(cwdFiles),
+      "Recursive scanner findings (matching input_* or image extensions):",
+      JSON.stringify(findings, null, 2)
+    ].join("\n");
+
+    fs.writeFileSync(path.join(process.cwd(), "src", "files_list.txt"), report, "utf8");
+    console.log("Wrote discovery report to files_list.txt");
+  } catch (e: any) {
+    console.error("Diagnostic scanner error:", e.message);
+  }
+
+  const { keyId: initKeyId, keySecret: initKeySecret } = getRazorpayCredentials();
+  console.log(`Server init - Resolved Key ID: "${initKeyId.substring(0, 8)}..." (length: ${initKeyId.length})`);
+  console.log(`Server init - Resolved Key Secret length: ${initKeySecret.length}`);
 }
 
-startServer();
+export default app;
