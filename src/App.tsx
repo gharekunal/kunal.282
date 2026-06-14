@@ -924,64 +924,59 @@ const CheckoutView = ({ data, onPaymentVerified }: { data: { price: number; name
       });
   }, []);
 
-  // Securely load SDK Scripts
-  useEffect(() => {
-    // 1. Load Razorpay script (idempotent - check before adding)
-    if (!document.getElementById("razorpay-sdk")) {
-      const rzpScript = document.createElement("script");
-      rzpScript.src = "https://checkout.razorpay.com/v1/checkout.js";
-      rzpScript.id = "razorpay-sdk";
-      rzpScript.async = true;
-      rzpScript.onload = () => {
-        console.log("Razorpay SDK loaded successfully.");
-        setRazorpayLoaded(true);
-      };
-      rzpScript.onerror = () => {
-        console.error("Failed to load Razorpay SDK. Check network connectivity.");
-      };
-      document.body.appendChild(rzpScript);
-    } else {
-      // Script already exists — SDK may already be loaded
-      if ((window as any).Razorpay) {
-        setRazorpayLoaded(true);
+  // Helper: dynamically load a script and return a Promise
+  const loadScript = (src: string, id: string): Promise<boolean> => {
+    return new Promise((resolve) => {
+      // Already loaded
+      if (document.getElementById(id)) {
+        resolve(true);
+        return;
       }
-    }
+      const script = document.createElement("script");
+      script.src = src;
+      script.id = id;
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
 
-    return () => {
-      // Don't remove — reuse across re-renders
-    };
+  // Load Razorpay SDK on mount
+  useEffect(() => {
+    loadScript("https://checkout.razorpay.com/v1/checkout.js", "razorpay-sdk")
+      .then((ok) => {
+        if (ok && (window as any).Razorpay) {
+          setRazorpayLoaded(true);
+          console.log("Razorpay SDK ready.");
+        }
+      });
   }, []);
 
+  // Load PayPal SDK — use PAYPAL_CLIENT_ID from server config, fallback to 'sandbox'
   useEffect(() => {
-    // 2. Load PayPal Checkout SDK
-    // Use gatewayConfig.paypalClientId if available, else default to 'sb' for sandbox
     const paypalId = gatewayConfig?.paypalClientId || "sb";
-
-    const existingScript = document.getElementById("paypal-sdk") as HTMLScriptElement | null;
-    if (existingScript) {
-      // If the script already loaded with the same client-id, just mark as loaded
-      if ((window as any).paypal) {
-        setPaypalLoaded(true);
-      }
+    // Remove old script if client-id changed
+    const existing = document.getElementById("paypal-sdk") as HTMLScriptElement | null;
+    if (existing && !existing.src.includes(paypalId)) {
+      existing.remove();
+      setPaypalLoaded(false);
+    }
+    if ((window as any).paypal) {
+      setPaypalLoaded(true);
       return;
     }
-
-    const ppScript = document.createElement("script");
-    ppScript.src = `https://www.paypal.com/sdk/js?client-id=${paypalId}&currency=USD&intent=capture`;
-    ppScript.id = "paypal-sdk";
-    ppScript.async = true;
-    ppScript.onload = () => {
-      console.log("PayPal SDK loaded successfully.");
-      setPaypalLoaded(true);
-    };
-    ppScript.onerror = () => {
-      console.log("PayPal SDK failed to load. SDK-based checkout unavailable.");
-    };
-    document.body.appendChild(ppScript);
-
-    return () => {
-      // Don't remove — reuse across re-renders
-    };
+    loadScript(
+      `https://www.paypal.com/sdk/js?client-id=${paypalId}&currency=USD&intent=capture`,
+      "paypal-sdk"
+    ).then((ok) => {
+      if (ok && (window as any).paypal) {
+        setPaypalLoaded(true);
+        console.log("PayPal SDK ready.");
+      } else {
+        console.warn("PayPal SDK failed to load with client-id:", paypalId);
+      }
+    });
   }, [gatewayConfig]);
 
   // Dynamically initialize PayPal Button render when requirements are matched
@@ -1120,7 +1115,7 @@ const CheckoutView = ({ data, onPaymentVerified }: { data: { price: number; name
     }
   }, [paypalLoaded, activeGateway, clientName, companyName, clientEmail, clientAddress, clientPhone, promoDiscount, promoCode, promoApplied, advanceINR, paypalInitiated]);
 
-  // Handle actual secure payment checkout via Razorpay
+  // Handle actual secure payment checkout via Razorpay or PayPal
   const handleDirectPayment = async () => {
     // Validate inputs
     if (!clientName.trim()) {
@@ -1148,84 +1143,52 @@ const CheckoutView = ({ data, onPaymentVerified }: { data: { price: number; name
     setIsProcessing(true);
 
     if (activeGateway === "razorpay") {
-      // Only fall back to mock if the Razorpay SDK itself failed to load into the page
-      if (!(window as any).Razorpay || !razorpayLoaded) {
-        console.log("Razorpay SDK not loaded. Processing fallback mock transaction.");
-        setTimeout(() => {
+      // ── Step 1: Ensure Razorpay SDK is available ──
+      if (!(window as any).Razorpay) {
+        setPaymentError("Loading Razorpay, please wait...");
+        const loaded = await loadScript("https://checkout.razorpay.com/v1/checkout.js", "razorpay-sdk");
+        // Give the SDK a moment to initialise its global
+        await new Promise(r => setTimeout(r, 500));
+        if (!loaded || !(window as any).Razorpay) {
+          setPaymentError("Razorpay could not be loaded. Please check your internet connection and try again, or switch to PayPal.");
           setIsProcessing(false);
-          onPaymentVerified({
-            paymentId: "pay_rzp_mock_" + Math.random().toString(36).substring(2, 11).toUpperCase(),
-            packageName: data.name,
-            clientName,
-            companyName,
-            clientEmail,
-            clientAddress,
-            taxId: taxId || "N/A",
-            promoCode,
-            promoDiscount,
-            promoApplied,
-            advanceUSD: parseFloat((advanceINR / 85).toFixed(2)),
-            amountInINR: advanceINR,
-            fullPriceUSD: data.price,
-            paymentMethod: "Razorpay (Sandbox Simulated Checkout)",
-            timestamp: new Date().toLocaleDateString('en-US', {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            })
-          });
-        }, 1200);
-        return;
+          return;
+        }
+        setRazorpayLoaded(true);
+        setPaymentError(null);
       }
 
       try {
-        // 1. Create order ID on backend server
+        // ── Step 2: Create order on server ──
         const res = await fetch("/api/create-order", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ amount: advanceINR, currency: "INR" })
         });
 
-        if (!res.ok) {
-          let errorMsg = "Order creation failed.";
-          try {
-            const contentType = res.headers.get("content-type");
-            if (contentType && contentType.includes("application/json")) {
-              const errData = await res.json();
-              errorMsg = errData.error || errorMsg;
-            } else {
-              errorMsg = `Server error from Razorpay order creator (${res.status})`;
-            }
-          } catch (pe) {
-            errorMsg = `Server error code ${res.status}`;
-          }
-          throw new Error(errorMsg);
-        }
-
         let orderData: any = {};
-        const contentType = res.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
-          orderData = await res.json();
-        } else {
-          throw new Error("Server did not return valid JSON for Razorpay order initialization.");
+        if (res.ok) {
+          const ct = res.headers.get("content-type") || "";
+          if (ct.includes("application/json")) {
+            orderData = await res.json();
+          }
         }
 
-        // 2. Instantiate Razorpay modal interface
+        const rzpKey = orderData.key || gatewayConfig?.keyId || "rzp_test_SqLcmKRJVgrtf5";
+        const rzpAmount = orderData.amount || Math.round(advanceINR * 100);
+
+        // ── Step 3: Open Razorpay checkout modal ──
         const options: any = {
-          key: orderData.key || gatewayConfig?.keyId || "rzp_test_SqLcmKRJVgrtf5",
-          amount: orderData.amount, // in paise
+          key: rzpKey,
+          amount: rzpAmount,
           currency: orderData.currency || "INR",
           name: "Clarix Labs",
-          description: `Retainer 50% Advance - ${data.name}`,
-          // Only pass order_id when the server actually returned one
+          description: `Retainer 50% Advance — ${data.name}`,
           ...(orderData.id ? { order_id: orderData.id } : {}),
-          handler: async function (response: any) {
+          handler: async (response: any) => {
             setIsProcessing(true);
             setPaymentError(null);
             try {
-              // Verify payment signature on backend server
               const verifyRes = await fetch("/api/verify-payment", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -1235,106 +1198,71 @@ const CheckoutView = ({ data, onPaymentVerified }: { data: { price: number; name
                   razorpay_signature: response.razorpay_signature
                 })
               });
+              const verifyData = await verifyRes.json().catch(() => ({}));
+              if (!verifyRes.ok) throw new Error(verifyData.error || "Signature verification failed.");
 
-              let verifyData: any = {};
-              const verifyContentType = verifyRes.headers.get("content-type");
-              if (verifyContentType && verifyContentType.includes("application/json")) {
-                verifyData = await verifyRes.json();
-              } else {
-                throw new Error(`Server returned invalid response metadata (${verifyRes.status})`);
-              }
-
-              if (!verifyRes.ok) {
-                throw new Error(verifyData.error || "Signature verification failed.");
-              }
-
-              // Route user successfully on complete transaction
               onPaymentVerified({
                 paymentId: response.razorpay_payment_id,
                 packageName: data.name,
-                clientName,
-                companyName,
-                clientEmail,
-                clientAddress,
+                clientName, companyName, clientEmail, clientAddress,
                 taxId: taxId || "N/A",
-                promoCode,
-                promoDiscount,
-                promoApplied,
+                promoCode, promoDiscount, promoApplied,
                 advanceUSD: parseFloat((advanceINR / 85).toFixed(2)),
                 amountInINR: advanceINR,
                 fullPriceUSD: data.price,
                 paymentMethod: "Razorpay Secure Checkout",
                 timestamp: new Date().toLocaleDateString('en-US', {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
+                  day: 'numeric', month: 'short', year: 'numeric',
+                  hour: '2-digit', minute: '2-digit'
                 })
               });
             } catch (e: any) {
-              setPaymentError(`Gateway signatures mismatch: ${e.message}`);
+              setPaymentError(`Payment verification failed: ${e.message}`);
             } finally {
               setIsProcessing(false);
             }
           },
-          prefill: {
-            name: clientName,
-            email: clientEmail,
-            contact: clientPhone
-          },
-          theme: {
-            color: "#2563eb"
-          },
-          modal: {
-            ondismiss: function () {
-              setIsProcessing(false);
-            }
-          }
+          prefill: { name: clientName, email: clientEmail, contact: clientPhone },
+          theme: { color: "#2563eb" },
+          modal: { ondismiss: () => setIsProcessing(false) }
         };
 
-        const razorpayInstance = new (window as any).Razorpay(options);
-        razorpayInstance.open();
-      } catch (err: any) {
-        setPaymentError(`Razorpay Checkout exception: ${err.message}`);
-        setIsProcessing(false);
-      }
-    } else if (activeGateway === "paypal") {
-      if (paypalLoaded) {
-        // PayPal SDK is loaded — show smart buttons (works with sandbox client-id=test too)
-        setPaypalInitiated(true);
-        setIsProcessing(false);
-        console.log("PayPal checkout initiated. Displaying smart buttons.");
-      } else {
-        // SDK failed to load entirely — fall back to mock
-        console.log("PayPal SDK not loaded. Processing mock payment.");
-        setTimeout(() => {
+        const rzp = new (window as any).Razorpay(options);
+        rzp.on("payment.failed", (resp: any) => {
+          setPaymentError(`Payment failed: ${resp.error?.description || "Unknown error"}`);
           setIsProcessing(false);
-          onPaymentVerified({
-            paymentId: "pay_pp_mock_" + Math.random().toString(36).substring(2, 11).toUpperCase(),
-            packageName: data.name,
-            clientName,
-            companyName,
-            clientEmail,
-            clientAddress,
-            taxId: taxId || "N/A",
-            promoCode,
-            promoDiscount,
-            promoApplied,
-            advanceUSD: parseFloat((advanceINR / 85).toFixed(2)),
-            amountInINR: advanceINR,
-            fullPriceUSD: data.price,
-            paymentMethod: "PayPal (Sandbox Simulated Checkout)",
-            timestamp: new Date().toLocaleDateString('en-US', {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            })
-          });
-        }, 1200);
+        });
+        rzp.open();
+      } catch (err: any) {
+        setPaymentError(`Razorpay error: ${err.message}`);
+        setIsProcessing(false);
       }
+
+    } else if (activeGateway === "paypal") {
+      // ── Ensure PayPal SDK is available ──
+      if (!(window as any).paypal) {
+        setPaymentError("Loading PayPal, please wait...");
+        const paypalId = gatewayConfig?.paypalClientId || "sb";
+        // Remove old failed script so we can reload
+        const old = document.getElementById("paypal-sdk");
+        if (old) old.remove();
+        const loaded = await loadScript(
+          `https://www.paypal.com/sdk/js?client-id=${paypalId}&currency=USD&intent=capture`,
+          "paypal-sdk"
+        );
+        await new Promise(r => setTimeout(r, 500));
+        if (!loaded || !(window as any).paypal) {
+          setPaymentError("PayPal could not be loaded. Please check your internet connection and try again, or switch to Razorpay.");
+          setIsProcessing(false);
+          return;
+        }
+        setPaypalLoaded(true);
+        setPaymentError(null);
+      }
+
+      // Show the PayPal smart buttons
+      setPaypalInitiated(true);
+      setIsProcessing(false);
     }
   };
 
