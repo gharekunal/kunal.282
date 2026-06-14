@@ -1,4 +1,4 @@
 Process CWD: C:\Users\Administrator\Downloads\clarix-labs
-CWD Files: [".env",".env.example",".gitignore","app","index.html","metadata.json","node_modules","package-lock.json","package.json","README.md","reviews.txt","server.ts","src","test-image.cjs","test-proxy-unavatar.cjs","test-proxy.cjs","test-request.js","test.js","tsconfig.json","vite.config.ts"]
+CWD Files: [".env",".env.example",".git",".gitignore","app","index.html","metadata.json","node_modules","package-lock.json","package.json","README.md","reviews.txt","server.ts","src","test-image.cjs","test-proxy-unavatar.cjs","test-proxy.cjs","test-request.js","test.js","tsconfig.json","vite.config.ts"]
 Recursive scanner findings (matching input_* or image extensions):
 []

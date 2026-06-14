@@ -234,9 +234,16 @@ async function getPayPalAccessToken() {
   } else if (isExplicitSandbox) {
     isProd = false;
   } else {
-    // Standard intelligent detection by PayPal client ID prefix:
-    // PayPal live client ID begins with 'Ac', while standard sandbox starts with other prefixes (like 'Ad')
-    isProd = clientId.startsWith("Ac");
+    // If Razorpay key is live, default PayPal to live too!
+    const { keyId } = getRazorpayCredentials();
+    const isRazorpayLive = keyId && (keyId.startsWith("rzp_live_") || keyId.includes("live"));
+    if (isRazorpayLive) {
+      isProd = true;
+    } else {
+      // Standard intelligent detection by PayPal client ID prefix:
+      // PayPal live client ID begins with 'Ac', while standard sandbox starts with other prefixes (like 'Ad')
+      isProd = clientId.startsWith("Ac");
+    }
   }
 
   const url = isProd ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com";
@@ -333,6 +340,12 @@ async function startServer() {
   console.log(`Server init - Resolved Key Secret length: ${initKeySecret.length}`);
 
   app.use(express.json());
+
+  // Dynamically reload environmental variables on every API call to support instant UI keys swap
+  app.use((req, res, next) => {
+    dotenv.config({ override: true });
+    next();
+  });
 
   // API Healthcheck endpoint
   app.get("/api/health", (req, res) => {
